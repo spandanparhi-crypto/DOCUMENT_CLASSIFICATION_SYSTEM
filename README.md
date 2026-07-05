@@ -600,8 +600,8 @@ This project is licensed under the **MIT License**.
 
 **Spandan Parhi**
 
-- GitHub: https://github.com/yourusername
-- LinkedIn: https://linkedin.com/in/yourprofile
+- GitHub: https://github.com/spandanparhi-crypto
+- LinkedIn: https://www.linkedin.com/in/spandan-parhi-852011414/
 
 ---
 
