@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Classification System</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Dashboard Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+            --success: #10b981;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .light-mode {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --panel-bg: rgba(255, 255, 255, 0.8);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-primary: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #059669;
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Styles --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo h1 i {
+            color: var(--accent-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-toggle {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+        }
+
+        /* --- Dashboard Analytics --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-info p {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+            font-size: 1.4rem;
+        }
+
+        /* --- Main Layout Workspace --- */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Dropzone Upload Section */
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .dropzone i {
+            font-size: 3rem;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+        }
+
+        .dropzone p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .dropzone input {
+            display: none;
+        }
+
+        /* --- Search & Filters --- */
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-main);
+            outline: none;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* --- Document Queue / List Table --- */
+        .table-container {
+            overflow-x: auto;
+            max-height: 450px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-invoice { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .badge-resume { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .badge-report { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        .badge-legal { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .badge-unknown { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+        .export-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn-action {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary { background: var(--accent-primary); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.1); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); }
+
+        /* Chart Canvas Styling */
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- --- Top Navigation Header --- -->
+        <header>
+            <div class="logo">
+                <h1><i class="fa-solid fa-brain"></i> DocuMind AI</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> Theme</button>
+            </div>
+        </header>
+
+        <!-- --- Metric Analytics Dashboard --- -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Total Processed</h3>
+                    <p id="metric-total">0</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-file-lines"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Invoices</h3>
+                    <p id="metric-invoice">0</p>
+                </div>
+                <div class="stat-icon" style="color: #f59e0b; background: rgba(245,158,11,0.15);"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Resumes</h3>
+                    <p id="metric-resume">0</p>
+                </div>
+                <div class="stat-icon" style="color: #3b82f6; background: rgba(59,130,246,0.15);"><i class="fa-solid fa-file-user"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Avg Confidence</h3>
+                    <p id="metric-confidence">0%</p>
+                </div>
+                <div class="stat-icon" style="color: #10b981; background: rgba(16,185,129,0.15);"><i class="fa-solid fa-chart-line"></i></div>
+            </div>
+        </div>
+
+        <!-- --- Main Content Workspace --- -->
+        <div class="workspace">
+            
+            <!-- Left Panel: Actions & Drag Drop -->
+            <div class="panel">
+                <h2>Document Ingestion</h2>
+                <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <h3>Drag & Drop Files Here</h3>
+                    <p>All file types supported (Simulated pipeline models PDF/DOCX structure parsing)</p>
+                    <input type="file" id="fileInput" multiple accept="*/*" onchange="handleFileSelect(event)">
+                </div>
+
+                <h3>Category Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Panel: Data Matrix Grid & Filter -->
+            <div class="panel">
+                <div class="controls">
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchBar" placeholder="Search by name or keyword..." oninput="renderTable()">
+                    </div>
+                    <select class="filter-select" id="categoryFilter" onchange="renderTable()">
+                        <option value="all">All Categories</option>
+                        <option value="Invoice">Invoice</option>
+                        <option value="Resume">Resume</option>
+                        <option value="Report">Report</option>
+                        <option value="Legal">Legal</option>
+                        <option value="Unknown">Unknown</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>File Type</th>
+                                <th>Category</th>
+                                <th>Confidence</th>
+                                <th>File Size</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentTableBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="export-actions">
+                    <button class="btn-action btn-secondary" onclick="exportData('csv')"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                    <button class="btn-action btn-primary" onclick="exportData('json')"><i class="fa-solid fa-code"></i> Export JSON</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- --- Classification Logic Script Engine --- -->
+    <script>
+        let documents = [];
+        let chartInstance = null;
+
+        // Offline NLP Keyword Dictionary Matrix Mapping
+        // Each keyword carries a weight - longer, more specific phrases score higher
+        // so a resume isn't drowned out by generic single words shared with other categories.
+        const classificationKeywords = {
+            Invoice: [
+                { term: 'invoice', weight: 2 }, { term: 'billing', weight: 1 }, { term: 'amount due', weight: 3 },
+                { term: 'total balance', weight: 2 }, { term: 'payment due', weight: 3 }, { term: 'tax invoice', weight: 3 },
+                { term: 'gst', weight: 1 }, { term: 'receipt', weight: 1 }, { term: 'vendor', weight: 1 },
+                { term: 'invoice number', weight: 3 }, { term: 'purchase order', weight: 2 }, { term: 'subtotal', weight: 2 }
+            ],
+            Resume: [
+                { term: 'resume', weight: 3 }, { term: 'curriculum vitae', weight: 3 }, { term: 'cv', weight: 1 },
+                { term: 'work experience', weight: 3 }, { term: 'professional experience', weight: 3 }, { term: 'education', weight: 1 },
+                { term: 'skills', weight: 1 }, { term: 'work history', weight: 3 }, { term: 'professional profile', weight: 2 },
+                { term: 'employment history', weight: 3 }, { term: 'career objective', weight: 3 }, { term: 'references available', weight: 3 },
+                { term: 'certifications', weight: 2 }, { term: 'linkedin', weight: 2 }, { term: 'objective', weight: 1 },
+                { term: '職務経歴', weight: 0 }, { term: 'internship', weight: 2 }, { term: 'relevant coursework', weight: 3 },
+                { term: 'gpa', weight: 2 }, { term: 'job title', weight: 2 }, { term: 'summary of qualifications', weight: 3 }
+            ],
+            Report: [
+                { term: 'abstract', weight: 2 }, { term: 'summary', weight: 1 }, { term: 'introduction', weight: 1 },
+                { term: 'methodology', weight: 3 }, { term: 'conclusion', weight: 1 }, { term: 'results', weight: 1 },
+                { term: 'data analysis', weight: 2 }, { term: 'quarterly', weight: 2 }, { term: 'findings', weight: 2 },
+                { term: 'executive summary', weight: 3 }, { term: 'appendix', weight: 2 }, { term: 'table of contents', weight: 2 }
+            ],
+            Legal: [
+                { term: 'agreement', weight: 1 }, { term: 'contract', weight: 2 }, { term: 'terms and conditions', weight: 3 },
+                { term: 'liability', weight: 2 }, { term: 'nda', weight: 2 }, { term: 'signatory', weight: 3 },
+                { term: 'hereby', weight: 2 }, { term: 'jurisdiction', weight: 2 }, { term: 'clause', weight: 1 },
+                { term: 'witnesseth', weight: 3 }, { term: 'indemnify', weight: 3 }, { term: 'governing law', weight: 3 }
+            ]
+        };
+
+        // Extension / MIME lookup so every uploaded file is labeled with what it actually is,
+        // independent of whether we can read and classify its content.
+        const fileTypeMap = {
+            pdf: 'PDF Document', doc: 'Word Document', docx: 'Word Document',
+            xls: 'Excel Spreadsheet', xlsx: 'Excel Spreadsheet', csv: 'CSV Spreadsheet',
+            ppt: 'PowerPoint', pptx: 'PowerPoint',
+            txt: 'Text File', md: 'Markdown File', json: 'JSON File', html: 'HTML File', htm: 'HTML File',
+            png: 'Image (PNG)', jpg: 'Image (JPEG)', jpeg: 'Image (JPEG)', gif: 'Image (GIF)', webp: 'Image (WEBP)', svg: 'Image (SVG)',
+            zip: 'Archive (ZIP)', rar: 'Archive (RAR)', '7z': 'Archive (7Z)',
+            mp3: 'Audio (MP3)', wav: 'Audio (WAV)', mp4: 'Video (MP4)', mov: 'Video (MOV)'
+        };
+
+        // File formats we cannot safely read as plain text in the browser (binary formats).
+        // Reading these with readAsText() produces garbled bytes that pollute keyword matching,
+        // which is why classification used to misfire (e.g. resumes saved as PDF/DOCX).
+        const binaryExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'zip', 'rar', '7z', 'mp3', 'wav', 'mp4', 'mov'];
+
+        function getFileExtension(fileName) {
+            const parts = fileName.split('.');
+            return parts.length > 1 ? parts.pop().toLowerCase() : '';
+        }
+
+        function getFileType(fileName) {
+            const ext = getFileExtension(fileName);
+            return fileTypeMap[ext] || (ext ? ext.toUpperCase() + ' File' : 'Unknown Type');
+        }
+
+        // UI Dropzone drag & drop styling hooks
+        const dropzone = document.getElementById('dropzone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
+        });
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            processFiles(files);
+        });
+
+        function handleFileSelect(event) {
+            processFiles(event.target.files);
+        }
+
+        // Process file stream parsing
+        function processFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const ext = getFileExtension(file.name);
+                const fileType = getFileType(file.name);
+                const isBinary = binaryExtensions.includes(ext);
+
+                const finalize = (textContent) => {
+                    const analysis = classifyText(textContent || '', file.name);
+
+                    documents.push({
+                        id: Date.now() + Math.random().toString(36).substr(2, 5),
+                        name: file.name,
+                        size: (file.size / 1024).toFixed(1) + ' KB',
+                        fileType: fileType,
+                        category: analysis.category,
+                        confidence: analysis.confidence
+                    });
+
+                    showToast(`Successfully processed and classified: ${file.name}`);
+                    updateSystemState();
+                };
+
+                if (isBinary) {
+                    // Binary formats (PDF, DOCX, images, etc.) can't be reliably read as plain text
+                    // in the browser - doing so was producing garbled bytes that randomly matched
+                    // keywords and caused wrong classifications (e.g. resumes marked as Unknown/Legal).
+                    // Instead we classify these using filename signals only, and still surface their
+                    // real file type so the user always knows what kind of file it is.
+                    finalize('');
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        finalize(e.target.result.toLowerCase());
+                    };
+                    reader.onerror = function() {
+                        finalize('');
+                    };
+                    reader.readAsText(file);
+                }
+            }
+        }
+
+        // Heuristics Score-based Classification Engine, weighted by phrase specificity,
+        // with a filename fallback so binary files (or files with little extractable text)
+        // still get a reasonable category instead of always defaulting to Unknown.
+        function classifyText(text, fileName) {
+            let matches = { Invoice: 0, Resume: 0, Report: 0, Legal: 0 };
+            let totalHits = 0;
+
+            for (const [category, keywords] of Object.entries(classificationKeywords)) {
+                keywords.forEach(({ term, weight }) => {
+                    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp('\\b' + escaped + '\\b', 'g');
+                    const count = (text.match(regex) || []).length;
+                    matches[category] += count * weight;
+                    totalHits += count * weight;
+                });
+            }
+
+            // Filename-based hints - useful both as a tiebreaker and as the primary signal
+            // for binary files where body text isn't available at all.
+            const lowerName = (fileName || '').toLowerCase();
+            const filenameHints = {
+                Resume: ['resume', 'cv', 'curriculum-vitae', 'curriculum_vitae'],
+                Invoice: ['invoice', 'receipt', 'bill'],
+                Report: ['report', 'analysis', 'findings'],
+                Legal: ['contract', 'agreement', 'nda', 'legal']
+            };
+            for (const [category, hints] of Object.entries(filenameHints)) {
+                hints.forEach(hint => {
+                    if (lowerName.includes(hint)) {
+                        matches[category] += 4;
+                        totalHits += 4;
+                    }
+                });
+            }
+
+            if (totalHits === 0) {
+                return { category: 'Unknown', confidence: 0 };
+            }
+
+            let topCategory = 'Unknown';
+            let maxHits = 0;
+
+            for (const [category, hits] of Object.entries(matches)) {
+                if (hits > maxHits) {
+                    maxHits = hits;
+                    topCategory = category;
+                }
+            }
+
+            const confidencePercentage = Math.round((maxHits / totalHits) * 100);
+            return {
+                category: topCategory,
+                confidence: Math.max(confidencePercentage, 45) // baseline lower boundary ceiling adjustments
+            };
+        }
+
+        // Render data matrix list layout
+        function renderTable() {
+            const tbody = document.getElementById('documentTableBody');
+            const searchVal = document.getElementById('searchBar').value.toLowerCase();
+            const filterVal = document.getElementById('categoryFilter').value;
+
+            tbody.innerHTML = '';
+
+            const filteredDocs = documents.filter(doc => {
+                const matchesSearch = doc.name.toLowerCase().includes(searchVal);
+                const matchesFilter = filterVal === 'all' || doc.category === filterVal;
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filteredDocs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No documents processed or matching filters.</td></tr>`;
+                return;
+            }
+
+            filteredDocs.forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${doc.name}</strong></td>
+                    <td><span style="color:var(--text-muted);">${doc.fileType || 'Unknown Type'}</span></td>
+                    <td><span class="badge badge-${doc.category.toLowerCase()}">${doc.category}</span></td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-weight:600; min-width:35px;">${doc.confidence}%</span>
+                            <div style="background:rgba(255,255,255,0.1); width:100px; height:6px; border-radius:3px; overflow:hidden;">
+                                <div style="background:var(--accent-primary); width:${doc.confidence}%; height:100%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${doc.size}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Real-time Dashboard Analytics state calculator
+        function updateMetrics() {
+            document.getElementById('metric-total').innerText = documents.length;
+            document.getElementById('metric-invoice').innerText = documents.filter(d => d.category === 'Invoice').length;
+            document.getElementById('metric-resume').innerText = documents.filter(d => d.category === 'Resume').length;
+
+            const totalConfidence = documents.reduce((acc, curr) => acc + curr.confidence, 0);
+            const avgConfidence = documents.length ? Math.round(totalConfidence / documents.length) : 0;
+            document.getElementById('metric-confidence').innerText = `${avgConfidence}%`;
+        }
+
+        // Chart.js Visualization Layer management 
+        function updateChart() {
+            const counts = { Invoice: 0, Resume: 0, Report: 0, Legal: 0, Unknown: 0 };
+            documents.forEach(d => counts[d.category]++);
+
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{
+                        data: Object.values(counts),
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#a855f7', '#ef4444', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: getComputedStyle(document.body).getPropertyValue('--text-main').trim() }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSystemState() {
+            renderTable();
+            updateMetrics();
+            updateChart();
+        }
+
+        // Dark / Light Interface Toggler
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.querySelector('.btn-toggle i');
+            if (document.body.classList.contains('light-mode')) {
+                icon.className = 'fa-solid fa-sun';
+            } else {
+                icon.className = 'fa-solid fa-moon';
+            }
+            if (chartInstance) updateChart();
+        }
+
+        // Data Serialization Export engine
+        function exportData(type) {
+            if (documents.length === 0) {
+                showToast("No records available to export data payload.");
+                return;
+            }
+
+            let dataStr = "";
+            let mimeType = "";
+            let fileName = `document_classification_report.${type}`;
+
+            if (type === 'json') {
+                dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(documents, null, 2));
+                mimeType = "text/json";
+            } else if (type === 'csv') {
+                let csvContent = "ID,File Name,File Type,Category,Confidence,Size\n";
+                documents.forEach(doc => {
+                    csvContent += `"${doc.id}","${doc.name}","${doc.fileType}","${doc.category}",${doc.confidence}%,${doc.size}\n`;
+                });
+                dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+                mimeType = "text/csv";
+            }
+
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--success)"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4000);
+        }
+
+        // Setup Initial Dashboard Instance Configuration State
+        window.onload = () => { updateChart(); };
+    </script>
+</body>
+</html>
